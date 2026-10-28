@@ -21,6 +21,38 @@ export const toCmText = (mm) => (mm / 10).toFixed(1);
 
 export const dimensionOps = (field, mm) => [{ op: 'update_dimensions', [field]: mm }];
 
+/**
+ * Resize to `{ width, height }`. Shelves, drawers and rails that would stick out of a lower
+ * interior move down to the highest spot that still fits, pushing the ones below them down
+ * as needed. Moves are listed lowest first, so every intermediate design stays valid; the
+ * resize comes last. Returns `{ ops, moved }` (ids of the items that move).
+ */
+export function sizePresetOps(design, { width, height }) {
+  const top = height - 2 * design.carcass.panelThickness;
+  const ops = [];
+  const moved = [];
+  design.compartments.forEach((compartment) => {
+    const items = [
+      ...compartment.shelves.map((s) => ({ op: 'modify_shelf', id: s.id, y: s.y, size: s.thickness })),
+      ...compartment.drawers.map((d) => ({ op: 'modify_drawer', id: d.id, y: d.y, size: d.height })),
+      ...compartment.rails.map((r) => ({ op: 'modify_rail', id: r.id, y: r.y, size: 0 })),
+    ].sort((a, b) => b.y - a.y);
+    let ceiling = top;
+    const moves = [];
+    items.forEach((item) => {
+      const y = Math.min(item.y, ceiling - item.size);
+      if (y !== item.y) moves.push({ op: item.op, id: item.id, y });
+      ceiling = y;
+    });
+    moves.reverse().forEach((move) => {
+      ops.push(move);
+      moved.push(move.id);
+    });
+  });
+  ops.push({ op: 'update_dimensions', width, height });
+  return { ops, moved };
+}
+
 export function doorTypeOps(type, count) {
   if (type === 'sliding') return [{ op: 'configure_doors', type, count: count ?? 2 }];
   return [{ op: 'configure_doors', type }];

@@ -54,6 +54,7 @@ select.field__input {
 .field__suffix { color: var(--md-sys-color-on-surface-variant); font: var(--md-sys-typescale-body-medium); }
 .field__message { margin: var(--space-1) 0 0; color: var(--md-sys-color-error); font: var(--md-sys-typescale-body-small); }
 .field__message:empty { display: none; }
+.field__note { margin: var(--space-1) 0 0; color: var(--md-sys-color-on-surface-variant); font: var(--md-sys-typescale-body-small); }
 
 .field-row { display: grid; gap: var(--space-2); }
 .field-row--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -68,8 +69,11 @@ select.field__input {
   background: transparent;
   color: var(--md-sys-color-on-surface);
   font: var(--md-sys-typescale-label-large);
+  white-space: nowrap;
   cursor: pointer;
 }
+/* Common sizes: three options share the panel width, so they use tighter padding. */
+.segmented[data-testid="size-presets"] .segmented__option { padding: 0 var(--space-3); }
 .segmented__option:last-child { border-right: 0; }
 .segmented__option:hover { background: rgba(35, 25, 23, 0.08); }
 .segmented__option[aria-pressed="true"] { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }

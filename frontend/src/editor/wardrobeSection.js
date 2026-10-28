@@ -1,8 +1,31 @@
 // Always-visible wardrobe settings: overall dimensions, doors and main materials.
 // Inputs report their own errors inline; buttons/selects report under their section.
+import { matchingSizePreset, SIZE_PRESETS } from '../domain/sizePresets.js';
 import { appearanceControls } from './appearanceControls.js';
 import { actionResult, cmField, countField, el, section, segmented } from './fields.js';
-import { dimensionOps, doorTypeOps } from './opsFromForm.js';
+import { dimensionOps, doorTypeOps, sizePresetOps } from './opsFromForm.js';
+
+const cmLabel = (mm) => String(mm / 10);
+
+/** One-click common sizes (width × height). A success re-renders the panel, so the note
+ *  about moved items is attached to the freshly rendered group. */
+function sizePresets(design, run, wardrobe) {
+  return segmented({
+    label: 'Common sizes (W × H, cm)',
+    testId: 'size-presets',
+    value: matchingSizePreset(design)?.id,
+    options: SIZE_PRESETS.map((preset) => ({ value: preset.id, label: `${cmLabel(preset.width)} × ${cmLabel(preset.height)}` })),
+    onChange: (id) => {
+      const { ops, moved } = sizePresetOps(design, SIZE_PRESETS.find((preset) => preset.id === id));
+      const result = actionResult(wardrobe, run(ops));
+      if (result.ok && moved.length) {
+        const note = `Moved ${moved.length} item${moved.length === 1 ? '' : 's'} down to fit the new height.`;
+        document.querySelector('[data-testid="size-presets"]')?.parentElement
+          .append(el('p', { className: 'field__note', text: note, attrs: { role: 'status' } }));
+      }
+    },
+  });
+}
 
 function dimensionsRow(design, run) {
   const { width, height, depth } = design.dimensions;
@@ -15,7 +38,8 @@ function dimensionsRow(design, run) {
 
 export function wardrobeSection({ design, catalog, run }) {
   const { doors } = design;
-  const wardrobe = section('Wardrobe', [dimensionsRow(design, run)]);
+  const wardrobe = section('Wardrobe', []);
+  wardrobe.append(sizePresets(design, run, wardrobe), dimensionsRow(design, run));
   const runDoors = (ops) => actionResult(wardrobe, run(ops));
   wardrobe.append(segmented({
     label: 'Doors',

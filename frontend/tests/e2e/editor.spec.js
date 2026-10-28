@@ -99,3 +99,21 @@ test('the added catalog material and colours reach the editor, the 3D view and t
   expect(design.carcass.appearance.color).toEqual({ catalogId: 'sage_green' });
   await page.waitForEvent('download');
 });
+
+test.describe('common sizes', () => {
+  test.beforeEach(async ({ page }) => openDesigner(page));
+
+  test('one click sets 160×200, moves the top shelf down, and the 3D view follows', async ({ page }) => {
+    const presets = page.getByTestId('size-presets');
+    await presets.getByRole('button', { name: '160 × 200' }).click();
+    await expect.poll(async () => (await state(page)).design.dimensions).toEqual({ width: 1600, height: 2000, depth: 600 });
+    await expect(presets.getByRole('button', { name: '160 × 200' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('status').filter({ hasText: 'Moved 1 item down to fit the new height.' })).toBeVisible();
+    await expect(page.getByText('W 160.0 cm', { exact: true })).toBeVisible();
+    await expect(page.getByText('H 200.0 cm', { exact: true })).toBeVisible();
+
+    await presets.getByRole('button', { name: '200 × 200' }).click();
+    await expect.poll(async () => (await state(page)).design.dimensions.width).toBe(2000);
+    await expect(page.getByTestId('dim-width')).toHaveValue('200.0');
+  });
+});

@@ -60,6 +60,8 @@ test.describe('keyboard only', () => {
     await openDesigner(page);
     await expect(page.locator('#properties-panel')).toBeFocused();
     await page.keyboard.press('Tab');
+    await expect(page.getByTestId('size-presets').getByRole('button').first()).toBeFocused();
+    for (let i = 0; i < 3; i += 1) await page.keyboard.press('Tab'); // past the three common sizes
     await expect(page.getByTestId('dim-width')).toBeFocused();
   });
 
